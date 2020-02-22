@@ -190,7 +190,7 @@ public class SpringApplication {
 
   `SpringFactoriesLoader之前有解析过，就是会去加载Springboot和Springboot-autuconfigure jar下的spring.factories的文件。`
 
-  ```java
+  ```yaml
   # springboot Application Context Initializers
   org.springframework.context.ApplicationContextInitializer=\
 
@@ -233,7 +233,7 @@ setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class)
 
 - 加载的Listener
 
-```java
+```yaml
 # Application Listeners
 org.springframework.context.ApplicationListener=\
 # 应用上下文加载完成后对缓存做清除工作
