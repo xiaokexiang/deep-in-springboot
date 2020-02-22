@@ -5,3 +5,5 @@
 ### <a href="./document/chapter2.md">WebMvc自动装配</a>
 
 ### <a href="./document/chapter3.md">Spring和SpringBoot的IOC</a>
+
+### <a href="./document/chapter4.md">SpringBoot准备IOC容器</a>
