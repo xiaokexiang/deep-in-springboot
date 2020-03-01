@@ -6,7 +6,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 /**
  * @author Li Jie
  * @date 2/22/2020
- * 实现ApplicationContextInitializer接口，用于在刷新容器(初始化ConfigurableApplicationContext)之前的回调接口
+ * 实现ApplicationContextInitializer接口，用于在刷新容器(初始化ConfigurableApplicationContext)之前的回调接口，console 打印log之前
  */
 public class MyApplicationContextInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
