@@ -431,9 +431,63 @@ public ConfigurableApplicationContext run(String... args) {
         return 0;
     }
     
+    // 调用AnnotationBeanDefinitionReader注册bean
     public void register(Class<?>... componentClasses) {
         for (Class<?> componentClass : componentClasses) {
             registerBean(componentClass);
         }
     }
     ```
+  
+    
+  
+  - <b>doRegisterBean</b>
+  
+    ```java
+    private <T> void doRegisterBean(Class<T> beanClass, @Nullable String name,
+         						  @Nullable Class<? extends Annotation>[] qualifiers, 
+                                    @Nullable Supplier<T> supplier,
+                                    @Nullable BeanDefinitionCustomizer[] customizers) {
+        // 将传入的bean包装成 BeanDefinition
+        AnnotatedGenericBeanDefinition abd = new AnnotatedGenericBeanDefinition(beanClass);
+        if (this.conditionEvaluator.shouldSkip(abd.getMetadata())) {
+            return;
+        }
+    
+        abd.setInstanceSupplier(supplier);
+        // 解析scope信息，设置bean的作用于
+        ScopeMetadata scopeMetadata = this.scopeMetadataResolver.resolveScopeMetadata(abd);
+        abd.setScope(scopeMetadata.getScopeName());
+        
+        // 生成bean的名称
+        String beanName = (name != null ? name : this.beanNameGenerator.generateBeanName(abd, this.registry));
+    	// 解析bean的注解
+        AnnotationConfigUtils.processCommonDefinitionAnnotations(abd);
+        if (qualifiers != null) {
+            for (Class<? extends Annotation> qualifier : qualifiers) {
+                if (Primary.class == qualifier) {
+                    abd.setPrimary(true);
+                }
+                else if (Lazy.class == qualifier) {
+                    abd.setLazyInit(true);
+                }
+                else {
+                    abd.addQualifier(new AutowireCandidateQualifier(qualifier));
+                }
+            }
+        }
+        // 使用定制器修改BeanDefinition
+        if (customizers != null) {
+            for (BeanDefinitionCustomizer customizer : customizers) {
+                customizer.customize(abd);
+            }
+        }
+       // 使用BeanDefinitionHolder将bean注册到IOC容器中
+        BeanDefinitionHolder definitionHolder = new BeanDefinitionHolder(abd, beanName);
+        definitionHolder = AnnotationConfigUtils.applyScopedProxyMode(scopeMetadata, definitionHolder, this.registry);
+        // 注册到IOC容器中 由具体的IOC容器实现注册(即put方法)
+        BeanDefinitionReaderUtils.registerBeanDefinition(definitionHolder, this.registry);
+    }
+    ```
+
+`至此IOC容器的准备工作已经完成，下面是IOC容器最核心的方法refresh。`
