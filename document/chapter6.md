@@ -249,7 +249,7 @@ public void refresh() throws BeansException, IllegalStateException {
 - <b>prepareBeanFactory</b>
 
   ```java
-  // beanfactory预处理
+  // beanfactory预处理 处理bean后置处理器 和 自动注入
   protected void prepareBeanFactory(ConfigurableListableBeanFactory beanFactory) {
       // 设置classLoader
       beanFactory.setBeanClassLoader(getClassLoader());
@@ -260,7 +260,7 @@ public void refresh() throws BeansException, IllegalStateException {
       beanFactory.addPropertyEditorRegistrar(new ResourceEditorRegistrar(this, getEnvironment()));
   
       // Configure the bean factory with context callbacks.
-      // 配置beanfactory的后置回调处理器
+      // 将applicationContext作为参数配置beanfactory的后置回调处理器
       beanFactory.addBeanPostProcessor(new ApplicationContextAwareProcessor(this));
       // 忽略指定的interface 或 自动注入类
       beanFactory.ignoreDependencyInterface(EnvironmentAware.class);
@@ -270,14 +270,14 @@ public void refresh() throws BeansException, IllegalStateException {
       beanFactory.ignoreDependencyInterface(MessageSourceAware.class);
       beanFactory.ignoreDependencyInterface(ApplicationContextAware.class);
       
-      // BeanFactory接口没在普通工厂中注册为可解析类型。
+      // BeanFactory接口未在普通工厂中注册为可解析类型。
       // 处理autowire bean自动注入
       beanFactory.registerResolvableDependency(BeanFactory.class, beanFactory);
       beanFactory.registerResolvableDependency(ResourceLoader.class, this);
       beanFactory.registerResolvableDependency(ApplicationEventPublisher.class, this);
       beanFactory.registerResolvableDependency(ApplicationContext.class, this);
   
-      // 配置一个可加载所有监听器的组件
+      // 通过后置处理器收集ApplicationListener的实现类
       beanFactory.addBeanPostProcessor(new ApplicationListenerDetector(this));
   
       // Detect a LoadTimeWeaver and prepare for weaving, if found.
@@ -362,12 +362,106 @@ public void refresh() throws BeansException, IllegalStateException {
 
     `包含@Bean(initMethoy)、Servlet规范：@PostConstruct以及InitializingBean接口的执行顺序。`
 
-    ```java
+    <img src="http://image.leejay.top/image/20200322/fVaX9C9nPUDv.png">
     
+    
+
+-  <b>postProcessBeanFactory</b>
+
+  ```java
+  // AnnotationConfigServletWebServerApplicationContext 注解IOC容器
+  @Override
+  protected void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
+      super.postProcessBeanFactory(beanFactory);
+      if (this.basePackages != null && this.basePackages.length > 0) {
+          this.scanner.scan(this.basePackages);
+      }
+      if (!this.annotatedClasses.isEmpty()) {
+          this.reader.register(ClassUtils.toClassArray(this.annotatedClasses));
+      }
+  }
+  ```
+
+  - <b>postProcessBeanFactory</b>
+
+    ```java
+    @Override
+    protected void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) {
+        beanFactory.addBeanPostProcessor(
+            // 核心就是将ServletContext、ServletConfig 注入到组件中
+            new WebApplicationContextServletContextAwareProcessor(this));
+        beanFactory.ignoreDependencyInterface(ServletContextAware.class);
+        registerWebApplicationScopes();
+    }
+    ```
+
+  - <b>registerWebApplicationScopes</b>
+
+    ```java
+    // 将Web的request域和session域注册到IOC容器，让IOC容器知道这两种作用域
+    private void registerWebApplicationScopes() {
+        ExistingWebApplicationScopes existingScopes = 
+            new ExistingWebApplicationScopes(getBeanFactory());
+        WebApplicationContextUtils.registerWebApplicationScopes(getBeanFactory());
+        existingScopes.restore();
+    }
+    ```
+
+    - <b>registerWebApplicationScopes</b>
+
+      ```java
+      public static void registerWebApplicationScopes(
+          						ConfigurableListableBeanFactory beanFactory) {
+          registerWebApplicationScopes(beanFactory, null);
+      }
+      
+      
+      public static void registerWebApplicationScopes(
+          						ConfigurableListableBeanFactory beanFactory,
+                                    @Nullable ServletContext sc) {
+          // 注册作用域类型
+          beanFactory.registerScope(WebApplicationContext.SCOPE_REQUEST, new RequestScope());
+          beanFactory.registerScope(WebApplicationContext.SCOPE_SESSION, new SessionScope());
+          if (sc != null) {
+              ServletContextScope appScope = new ServletContextScope(sc);
+              beanFactory.registerScope(WebApplicationContext.SCOPE_APPLICATION, appScope);
+              // Register as ServletContext attribute, for ContextCleanupListener to detect it.
+              sc.setAttribute(ServletContextScope.class.getName(), appScope);
+          }
+      
+          // 自动注入request session相关的作用域
+          beanFactory.registerResolvableDependency(
+              ServletRequest.class, new RequestObjectFactory());
+          beanFactory.registerResolvableDependency(
+              ServletResponse.class, new ResponseObjectFactory());
+          beanFactory.registerResolvableDependency(
+              HttpSession.class, new SessionObjectFactory());
+          beanFactory.registerResolvableDependency(
+              WebRequest.class, new WebRequestObjectFactory());
+          if (jsfPresent) {
+              FacesDependencyRegistrar.registerFacesDependencies(beanFactory);
+          }
+      }
+      ```
+
+  - <b>scanPackage</b>
+
+    ```java
+    private final AnnotatedBeanDefinitionReader reader;
+    private final ClassPathBeanDefinitionScanner scanner;
+    
+    if (!ObjectUtils.isEmpty(this.basePackages)) {
+        this.scanner.scan(this.basePackages);
+    }
+    if (!this.annotatedClasses.isEmpty()) {
+        this.reader.register(ClassUtils.toClassArray(this.annotatedClasses));
+    }
     ```
 
     
 
-- 
+- <b>invokeBeanFactoryPostProcessors</b>
+
+- <b>registerBeanPostProcessors</b>
 
 ​     

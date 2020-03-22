@@ -9,3 +9,5 @@
 ### <a href="./document/chapter4.md">IOC: SpringBoot准备IOC容器</a>
 
 ### <a href="./document/chapter5.md">IOC: 准备运行时环境</a>
+
+### <a href="./document/chapter6.md">IOC: Refresh</a>
