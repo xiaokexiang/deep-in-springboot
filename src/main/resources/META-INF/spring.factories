@@ -1,1 +1,5 @@
-org.springframework.context.ApplicationContextInitializer=top.leejay.springboot.chapter7.MyApplicationContextInitializer
+org.springframework.context.ApplicationContextInitializer=\
+top.leejay.springboot.chapter7.MyApplicationContextInitializer
+
+org.springframework.boot.SpringApplicationRunListener=\
+top.leejay.springboot.chapter12.MySpringApplicationRunListener

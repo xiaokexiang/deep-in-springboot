@@ -42,6 +42,8 @@ public ConfigurableApplicationContext run(String... args) {
   }
   ```
 
+  > `SpringApplicationRunListeners`默认的实现类是`EventPublishingRunListener`，该类会在不同的时期发布不同的事件，这些事件都是预定义好的，与`ApplicationListener`不同，前者是与IOC容器启动相关的内置事件监听器。后者是内置的自定义事件监听器。
+
 - <b>Enviroment</b>
 
   `它是IOC容器的运行环境，它包括Profile和Properties两大部分，它可由一个到几个激活的Profile共同配置，它的配置可在应用级Bean中获取`
@@ -294,7 +296,7 @@ public ConfigurableApplicationContext run(String... args) {
     }
     ```
   
-    
+    > 这里开始处理从spring.factories中获取的`ApplicationContextInitializer`实例们。
   
   - <b>Load Source</b>
   
@@ -444,10 +446,12 @@ public ConfigurableApplicationContext run(String... args) {
   - <b>doRegisterBean</b>
   
     ```java
-    private <T> void doRegisterBean(Class<T> beanClass, @Nullable String name,
-         						  @Nullable Class<? extends Annotation>[] qualifiers, 
-                                    @Nullable Supplier<T> supplier,
-                                    @Nullable BeanDefinitionCustomizer[] customizers) {
+    private <T> void doRegisterBean(
+        Class<T> beanClass, 
+        @Nullable String name,						  
+        @Nullable Class<? extends Annotation>[] qualifiers,                         
+        @Nullable Supplier<T> supplier,
+        @Nullable BeanDefinitionCustomizer[] customizers) {
         // 将传入的bean包装成 BeanDefinition
         AnnotatedGenericBeanDefinition abd = new AnnotatedGenericBeanDefinition(beanClass);
         if (this.conditionEvaluator.shouldSkip(abd.getMetadata())) {

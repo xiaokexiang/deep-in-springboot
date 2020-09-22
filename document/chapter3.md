@@ -4,7 +4,8 @@
 `Spring的IOC容器最顶级的接口是BeanFactory，那为什么Spring推荐使用ApplicationContext作为IOC容器呢？因为ApplicationContext包含了BeanFactory的全部功能，同时扩展了容器的其他功能(比如事件、国际化等等)`
 
 ```java
-    public interface ApplicationContext extends EnvironmentCapable, ListableBeanFactory, HierarchicalBeanFactory,
+    public interface ApplicationContext extends 
+        EnvironmentCapable, ListableBeanFactory, HierarchicalBeanFactory,
             MessageSource, ApplicationEventPublisher, ResourcePatternResolver {
 
     }

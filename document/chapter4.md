@@ -21,7 +21,8 @@ public class SpringApplication {
    	  return run(new Class<?>[] { primarySource }, args);
    }
    // 这里返回的是ConfigurableApplicationContext(继承了ApplicationContext)
-   public static ConfigurableApplicationContext run(Class<?>[] primarySources, String[] args) {
+   public static ConfigurableApplicationContext run(
+       Class<?>[] primarySources, String[] args) {
       // 调用SpringApplication构造函数创建SpringApplication对象并调用run()方法
       return new SpringApplication(primarySources).run(args);
    }
@@ -38,7 +39,8 @@ public class SpringApplication {
     }
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public SpringApplication(ResourceLoader resourceLoader, Class<?>... primarySources) {
+    public SpringApplication(
+        ResourceLoader resourceLoader, Class<?>... primarySources) {
         // 此时resourceLoader 为null
         this.resourceLoader = resourceLoader;
         // 断言primarySources是否为null
@@ -47,10 +49,14 @@ public class SpringApplication {
         this.primarySources = new LinkedHashSet<>(Arrays.asList(primarySources));
         // 设置WebApplicationType 
         this.webApplicationType = WebApplicationType.deduceFromClasspath();
-        // 设置初始化器
-        setInitializers((Collection) getSpringFactoriesInstances(ApplicationContextInitializer.class));
-        // 设置监听器
-        setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
+        // 设置初始化器，在IOC容器之前会回调该接口的实现，来调用初始化方法
+        // 该方法中会将classpath中所有spring.factories文件中包含
+        // ApplicationContextInitializer的配置读取出来
+        setInitializers((Collection) getSpringFactoriesInstances(
+            ApplicationContextInitializer.class));
+        // 设置监听器，和初始化器同理
+        setListeners((Collection) 
+                     getSpringFactoriesInstances(ApplicationListener.class));
         // 设置主配置类
         this.mainApplicationClass = deduceMainApplicationClass();
     }
@@ -64,7 +70,8 @@ public class SpringApplication {
 @SpringBootApplication
 public class SpringbootApplication {
 	public static void main(String[] args) {
-		SpringApplication springApplication = new SpringApplication(SpringbootApplication.class);
+		SpringApplication springApplication = 
+            new SpringApplication(SpringbootApplication.class);
 		// 关闭banner
 		springApplication.setBannerMode(Banner.Mode.OFF);
 		// 设置webApplicationType
@@ -280,7 +287,8 @@ public class SpringApplication {
 		try {
 			StackTraceElement[] stackTrace = new RuntimeException().getStackTrace();
 			for (StackTraceElement stackTraceElement : stackTrace) {
-				// 从 deduceMainApplicationClass 方法开始往上爬，哪一层调用栈上有main方法，方法对应的类就是主配置类，就返回这个类
+				// 从 deduceMainApplicationClass 方法开始往上爬，
+                // 哪一层调用栈上有main方法，方法对应的类就是主配置类，就返回这个类
 				if ("main".equals(stackTraceElement.getMethodName())) {
 					return Class.forName(stackTraceElement.getClassName());
 				}
@@ -293,7 +301,10 @@ public class SpringApplication {
 	}
 }
 ```
-> 至此new SpringApplication(SpringBootApplication.class)初始化操作完成，下一篇是执行run()方法的代码解读。
+> 至此new SpringApplication(SpringBootApplication.class)初始化操作完成
 
+### 总结
 
+1. 设置主启动类变量参数及`web应用类型(Servlet、Reactive、None)`。
+2. 获取`ApplicationContextInitializer`和`ApplicationListener`默认配置项。
 
